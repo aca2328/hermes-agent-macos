@@ -1,0 +1,29 @@
+#!/bin/zsh
+# site.conf — everything about YOUR machine's network, in one place.
+#
+# Copy to site.conf and fill in. install.sh does this for you if it is absent.
+#
+# In the PUBLIC mirror site.conf is gitignored and this .example is the tracked
+# template. In the PRIVATE repo site.conf is committed with the real values --
+# un-versioning them would defeat the point of that repo. Both share this file.
+#
+# Sourced by hermes-container.conf, which every caller sources.
+
+# Apple `container` network. Always a manually created, subnet-pinned network --
+# never the auto-created `default`, which has no pinned subnet, so
+# `container system stop`/`start` lets it silently pick a new one and breaks
+# anything that assumed the old gateway address.
+SITE_NETWORK="app-net"
+SITE_SUBNET="10.0.0.0/24"
+
+# Fallback only. start-hermes.sh asks `container network inspect` for the live
+# gateway first and uses this if that lookup fails.
+SITE_GATEWAY_IP="10.0.0.1"
+
+# Containers on SITE_NETWORK auto-register as <name>.$SITE_DNS_DOMAIN. Use the
+# DNS name, never a literal IP: each recreate takes the next address on the
+# subnet. See docs/traps.md. Leave as-is if you have not set up container DNS.
+SITE_DNS_DOMAIN="example.com"
+
+# Create the network with:
+#   container network create "$SITE_NETWORK" --subnet "$SITE_SUBNET"

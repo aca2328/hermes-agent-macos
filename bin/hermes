@@ -1,0 +1,27 @@
+#!/bin/sh
+# hermes — run the containerized Hermes Agent CLI from macOS.
+#
+# The CLI lives only inside the `hermes` container at /opt/hermes/.venv/bin/hermes.
+# ~/.hermes is bind-mounted there as /opt/data (HERMES_HOME), so config, .env,
+# sessions and logs are shared with the Mac.
+#
+# Runs as the `hermes` user (uid 10000): `container exec` defaults to root, and
+# root-created files under /opt/data are unwritable by the gateway process.
+
+set -e
+
+CONTAINER=hermes
+BIN=/opt/hermes/.venv/bin/hermes
+
+if ! container ls 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$CONTAINER"; then
+    echo "hermes: container '$CONTAINER' is not running — starting it..." >&2
+    container start "$CONTAINER" >/dev/null
+    sleep 3
+fi
+
+# Allocate a TTY only when attached to one, so pipes and scripts still work.
+if [ -t 0 ] && [ -t 1 ]; then
+    exec container exec -i -t -u hermes -w /opt/data "$CONTAINER" "$BIN" "$@"
+else
+    exec container exec -u hermes -w /opt/data "$CONTAINER" "$BIN" "$@"
+fi

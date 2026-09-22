@@ -1,0 +1,25 @@
+# Reference excerpt — the settings this repo's docs actually depend on.
+#
+# NOT a full config and NOT the live file. ~/.hermes/config.yaml is runtime
+# state: `hermes config set` rewrites it, and the upgrade script's rollback
+# restores it from a backup. Nothing here installs or enforces it.
+
+database:
+  # DELETE, not WAL. ~/.hermes is a virtiofs bind mount into the container, and
+  # SQLite WAL shared-memory is not coherent across the VM boundary --
+  # concurrent writers can corrupt the database silently. See
+  # docs/rca-2026-09-22-sqlite-wal-virtiofs.md.
+  journal_mode: delete
+
+model:
+  provider: zai          # the provider the bundled zai guard plugin wraps
+
+agent:
+  # medium is rejected for GLM-5.3 on the standard z.ai endpoint (accepted on
+  # the coding endpoint). See plugins/model-providers/zai/__init__.py.
+  reasoning_effort: low
+
+terminal:
+  # `local` runs dispatched work unsandboxed as your Mac user. Read the
+  # security section of docs/architecture.md before leaving this as-is.
+  backend: local

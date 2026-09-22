@@ -1,0 +1,24 @@
+# Secrets. Note the negation: a bare `.env*` rule would swallow the
+# example file too. This repo never holds a real .env — it lives in ~/.hermes —
+# but the rule is here so a stray copy can never be staged.
+.env
+.env.*
+!.env.example
+
+# Runtime state that must never be committed
+*.log
+.upgrade.lock/
+__pycache__/
+*.pyc
+
+# Rendered launchd plists (install.sh writes these straight to
+# ~/Library/LaunchAgents; only the .example templates are tracked)
+launchd/*.plist
+
+.DS_Store
+
+# Release dry-run preview tree
+.export-preview/
+
+# Your machine's site values (copy site.conf.example)
+container/site.conf
