@@ -5,7 +5,7 @@ with Apple's [`container`](https://github.com/apple/container) runtime, managed 
 launchd.
 
 Image: `nousresearch/hermes-agent`, pinned in `container/hermes-container.conf`
-(currently `v2026.9.21`).
+(currently `v2026.9.24`).
 
 ## Requirements
 
