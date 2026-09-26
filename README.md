@@ -4,8 +4,8 @@ Run the [Hermes Agent](https://github.com/nousresearch/hermes-agent) gateway on 
 with Apple's [`container`](https://github.com/apple/container) runtime, managed by
 launchd.
 
-Image: `nousresearch/hermes-agent`, pinned in `container/hermes-container.conf`
-(currently `v2026.9.24`).
+Image: `nousresearch/hermes-agent`, pinned by `HERMES_IMAGE_TAG` in
+`container/hermes-container.conf`.
 
 ## Requirements
 
