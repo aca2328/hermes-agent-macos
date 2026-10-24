@@ -6,8 +6,9 @@
 #   hermes-upgrade.sh --check    report only; never pull, recreate or test
 #   hermes-upgrade.sh --force    re-run the upgrade even if already current
 #
-# Only version tags (vYYYY.M.D[.N]) are considered. The rolling `latest`/`main`
-# tags are deliberately ignored: they move without review.
+# Only version tags (vX.Y.Z[.N] — upstream moved from vYYYY.M.D to v0.x.y in
+# Oct 2026) are considered. The rolling `latest`/`stable`/`main` tags and the
+# `-desktop`/`rc.` variants are deliberately ignored: they move without review.
 #
 # Exit: 0 = up to date or upgrade verified · 1 = upgrade failed, rolled back
 #       2 = upgrade failed AND rollback failed (needs a human) · 3 = setup error
@@ -62,28 +63,34 @@ except Exception:
 }
 
 # ---- newest published release tag on Docker Hub
+# Returns 1 if Docker Hub is unreachable, 2 if it answered but no tag matched.
 latest_tag() {
-  "$CURL" -sf -m 30 \
-    "https://hub.docker.com/v2/repositories/${HERMES_IMAGE_REPO}/tags?page_size=50&ordering=last_updated" \
-  | "$PY" -c 'import sys,json,re
+  local body
+  body="$("$CURL" -sf -m 30 \
+    "https://hub.docker.com/v2/repositories/${HERMES_IMAGE_REPO}/tags?page_size=50&ordering=last_updated")" \
+    || return 1
+  print -r -- "$body" | "$PY" -c 'import sys,json,re
 try:
     rows=json.load(sys.stdin).get("results",[])
 except Exception:
-    sys.exit(1)
-pat=re.compile(r"^v20\d\d\.\d+\.\d+(\.\d+)?$")
+    sys.exit(2)
+pat=re.compile(r"^v\d+\.\d+\.\d+(\.\d+)?$")
 for t in rows:                      # already newest-first
     if pat.match(t["name"]):
-        print(t["name"]); break'
+        print(t["name"]); break
+else:
+    sys.exit(2)'
 }
 
 CUR="$(current_tag)"
 [ -n "$CUR" ] || CUR="$HERMES_IMAGE_TAG"
 NEW="$(latest_tag)"
-
-if [ -z "$NEW" ]; then
-  log "could not reach Docker Hub — leaving $CUR in place"
-  exit 0
-fi
+case $? in
+  1) log "could not reach Docker Hub — leaving $CUR in place"; exit 0 ;;
+  2) log "WARNING: Docker Hub answered but no release tag matched — tag scheme changed? leaving $CUR in place"
+     notify "Hermes upgrade check" "No release tag recognised on Docker Hub"
+     exit 0 ;;
+esac
 
 log "installed=$CUR  latest_release=$NEW  mode=$MODE"
 
